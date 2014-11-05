@@ -1,15 +1,70 @@
-xcodearchive() {
-	current_pwd="$(pwd)"
-	cd ~/Sites/dev/repo/procyon-ng/ProcyonNG
-	if (( $# == 0 )); then
-		xcodebuild -scheme ProcyonNG archive
-	else
-		xcodebuild -scheme $1 archive
-	fi
-        cd ~/Library/Developer/Xcode/Archives/*(/om[1])
-	cd *(/om[1])
-	export LAST_ARCHIVE="$(pwd)"
-	cd $current_pwd
+_xcodebuild() {
+	xcodebuild $@
+}
+
+_xcodeclean() {
+	xcodebuild -alltargets clean
+}
+
+_xcodearchive() {
+	_xcodeclean
+	_xcodebuild $@ archive
+}
+
+_xcoderun() {
+	device="iPad-Air"
+	ios="8.0"
+	for x in $@; do
+		case $x in
+			-device)
+				device_flag=1
+				;;
+			-ios)
+				ios_flag=1
+                                ;;
+			*)
+				if (( device_flag == 1 )); then
+					device_flag=0
+					device=$x
+				elif (( ios_flag == 1)); then
+					ios_flag=0
+					ios=$x
+				else
+					args+=($x)
+				fi
+		esac
+	; done
+	_xcodebuild $args
+	ios-sim launch build/Release-iphonesimulator/*.app(/[1]) --devicetypeid "com.apple.CoreSimulator.SimDeviceType.$device, $ios"
+}
+
+_xcodedeploy() {
+	echo $@
+}
+
+_xcodehelp() {
+	echo "help"
+}
+
+xcode() {
+	command=$1
+	shift
+	case "$command" in
+		build)
+			_xcodebuild $@
+			;;
+		archive)
+			_xcodearchive $@
+                        ;;
+		run)
+                        _xcoderun $@
+                        ;;
+		deploy)
+                        _xcodedeploy $@
+                        ;;
+		*)
+			_xcodehelp
+	esac
 }
 
 xcodedeploy() {
