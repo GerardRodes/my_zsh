@@ -80,6 +80,25 @@ prompt_screen() {
   fi
 }
 
+prompt_tmux() {
+  if [[ $(tmux list-sessions 2> /dev/null | wc -l) -ne 0 ]]; then
+    if [[ -n $TMUX ]]; then
+      prompt_segment green black
+    else
+      prompt_segment black green
+    fi
+    echo -n "$(tmux list-sessions | wc -l)"
+  fi
+  if [[ $(tmux list-sessions 2> /dev/null | grep -v '(attached)' | wc -l) -ne 0 ]]; then
+    if [[ -n $TMUX ]]; then
+      prompt_segment green red
+    else
+      prompt_segment black red
+    fi
+    echo -n "$(tmux list-sessions | grep -v '(attached)' | wc -l)"
+  fi
+}
+
 # Git: branch/detached head, dirty status
 prompt_git() {
   local ref dirty mode repo_path
@@ -201,6 +220,7 @@ prompt_status() {
 build_prompt() {
   RETVAL=$?
   prompt_screen
+  prompt_tmux
   prompt_status
   prompt_virtualenv
   prompt_context
